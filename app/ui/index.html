@@ -21,12 +21,7 @@
             overflow-y: auto;
         }
 
-        /* Light             <div class="footer">
-                <p>GlanceWatch v1.0.9 • System Monitoring Dashboard • 
-                    <a href="/docs">Documentation</a> • 
-                    <a href="/api">API Docs</a>
-                </p>
-            </div>tyles */
+        /* Light Mode Styles */
         body.light-mode {
             background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
             color: #1a1a1a;
@@ -710,6 +705,131 @@
                 flex-direction: column;
             }
         }
+
+        /* System Info Panel */
+        .system-info-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(5px);
+            border-radius: 16px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        body.light-mode .system-info-panel {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .system-info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .system-info-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        body.light-mode .system-info-icon {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .system-info-content {
+            flex: 1;
+        }
+
+        .system-info-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        body.light-mode .system-info-label {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        .system-info-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        body.light-mode .system-info-value {
+            color: #1a1a1a;
+        }
+
+        /* Sparkline Mini Charts */
+        .sparkline-container {
+            width: 100%;
+            height: 30px;
+            margin-top: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .sparkline {
+            display: flex;
+            align-items: flex-end;
+            height: 100%;
+            gap: 1px;
+            padding: 2px;
+        }
+
+        .sparkline-bar {
+            flex: 1;
+            background: rgba(16, 185, 129, 0.6);
+            border-radius: 2px 2px 0 0;
+            min-width: 2px;
+            transition: height 0.3s ease;
+        }
+
+        .sparkline-bar.warning {
+            background: rgba(245, 158, 11, 0.6);
+        }
+
+        .sparkline-bar.critical {
+            background: rgba(239, 68, 68, 0.6);
+        }
+
+        /* Export Button */
+        .export-btn {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: rgba(59, 130, 246, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -728,6 +848,37 @@
             </div>
 
     <div class="container">
+        <!-- System Info Panel -->
+        <div class="system-info-panel" id="systemInfoPanel">
+            <div class="system-info-item">
+                <div class="system-info-icon">🖥️</div>
+                <div class="system-info-content">
+                    <div class="system-info-label">Hostname</div>
+                    <div class="system-info-value" id="sysHostname">Loading...</div>
+                </div>
+            </div>
+            <div class="system-info-item">
+                <div class="system-info-icon">💻</div>
+                <div class="system-info-content">
+                    <div class="system-info-label">Operating System</div>
+                    <div class="system-info-value" id="sysOS">Loading...</div>
+                </div>
+            </div>
+            <div class="system-info-item">
+                <div class="system-info-icon">🐍</div>
+                <div class="system-info-content">
+                    <div class="system-info-label">Python Version</div>
+                    <div class="system-info-value" id="sysPython">Loading...</div>
+                </div>
+            </div>
+            <div class="system-info-item">
+                <div class="system-info-icon">⏰</div>
+                <div class="system-info-content">
+                    <div class="system-info-label">Server Uptime</div>
+                    <div class="system-info-value" id="sysUptime">Loading...</div>
+                </div>
+            </div>
+        </div>
         <!-- Circular Metrics Grid -->
         <div class="metrics-grid" id="metricsGrid">
             <div class="metric-card">
@@ -740,6 +891,9 @@
                 <div class="metric-label">Memory Usage</div>
                 <div class="metric-threshold" id="ramThresholdText">Threshold: --</div>
                 <span class="metric-status" id="ramStatusBadge">--</span>
+                <div class="sparkline-container">
+                    <div class="sparkline" id="ramSparkline"></div>
+                </div>
             </div>
 
             <div class="metric-card">
@@ -752,6 +906,9 @@
                 <div class="metric-label">Processor Usage</div>
                 <div class="metric-threshold" id="cpuThresholdText">Threshold: --</div>
                 <span class="metric-status" id="cpuStatusBadge">--</span>
+                <div class="sparkline-container">
+                    <div class="sparkline" id="cpuSparkline"></div>
+                </div>
             </div>
 
             <div class="metric-card">
@@ -764,6 +921,9 @@
                 <div class="metric-label">Storage Usage</div>
                 <div class="metric-threshold" id="diskThresholdText">Threshold: --</div>
                 <span class="metric-status" id="diskStatusBadge">--</span>
+                <div class="sparkline-container">
+                    <div class="sparkline" id="diskSparkline"></div>
+                </div>
             </div>
         </div>
 
@@ -875,8 +1035,76 @@
             </div>
     </div>
 
+    <!-- Export Button -->
+    <button class="export-btn" id="exportBtn" title="Export metrics as JSON">
+        📥 Export
+    </button>
 
     <script>
+        // Metric History for Sparklines (last 20 data points)
+        const metricHistory = {
+            ram: [],
+            cpu: [],
+            disk: []
+        };
+        const MAX_HISTORY = 20;
+
+        // Update sparkline chart
+        function updateSparkline(elementId, values, threshold) {
+            const container = document.getElementById(elementId);
+            if (!container) return;
+            
+            container.innerHTML = '';
+            const maxVal = Math.max(...values, 100);
+            
+            values.forEach(val => {
+                const bar = document.createElement('div');
+                bar.className = 'sparkline-bar';
+                bar.style.height = `${(val / maxVal) * 100}%`;
+                
+                if (val >= threshold) {
+                    bar.classList.add('critical');
+                } else if (val >= threshold * 0.8) {
+                    bar.classList.add('warning');
+                }
+                
+                container.appendChild(bar);
+            });
+        }
+
+        // Add value to history
+        function addToHistory(metric, value) {
+            metricHistory[metric].push(value);
+            if (metricHistory[metric].length > MAX_HISTORY) {
+                metricHistory[metric].shift();
+            }
+        }
+
+        // Export metrics as JSON
+        document.getElementById('exportBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/metrics');
+                const metrics = await response.json();
+                
+                const exportData = {
+                    timestamp: new Date().toISOString(),
+                    metrics: metrics,
+                    history: metricHistory
+                };
+                
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `glancewatch-metrics-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Export failed:', error);
+                alert('Failed to export metrics');
+            }
+        });
+
         // Theme Management
         const themeToggle = document.getElementById('themeToggle');
         const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -980,6 +1208,16 @@
                 document.getElementById('diskStatusBadge').className = 'metric-status ' + (data.disk.ok ? 'ok' : 'critical');
                 document.getElementById('diskCircle').className = 'metric-circle ' + (data.disk.ok ? 'ok' : 'critical');
                 
+                // Update sparklines
+                addToHistory('ram', data.ram.value);
+                addToHistory('cpu', data.cpu.value);
+                if (data.disk.disks.length > 0) {
+                    addToHistory('disk', data.disk.disks[0].percent_used);
+                }
+                updateSparkline('ramSparkline', metricHistory.ram, data.ram.threshold);
+                updateSparkline('cpuSparkline', metricHistory.cpu, data.cpu.threshold);
+                updateSparkline('diskSparkline', metricHistory.disk, data.disk.threshold);
+                
                 // Load system info for bottom section
                 await loadSystemInfo();
                 
@@ -1001,6 +1239,19 @@
                 const response = await fetch('/system-info');
                 if (!response.ok) return;
                 const data = await response.json();
+                
+                // Update System Info Panel (new in v1.2.5)
+                if (data.system) {
+                    document.getElementById('sysHostname').textContent = data.system.hostname || 'Unknown';
+                    document.getElementById('sysOS').textContent = 
+                        `${data.system.os_name || 'Unknown'} ${data.system.os_version || ''}`.trim();
+                }
+                if (data.python_version) {
+                    document.getElementById('sysPython').textContent = data.python_version;
+                }
+                if (data.uptime) {
+                    document.getElementById('sysUptime').textContent = data.uptime;
+                }
                 
                 // Update Uptime - Glances returns it as a string like "23:37:59"
                 if (data.uptime) {

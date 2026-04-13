@@ -224,8 +224,13 @@ class GlancesMonitor:
         )
     
     async def get_system_info(self) -> Dict[str, Any]:
-        """Get additional system information (uptime, load, network)."""
+        """Get additional system information (uptime, load, network, system details)."""
         info = {}
+        
+        # Get system info (hostname, OS)
+        system_data = await self._fetch_glances_endpoint("system")
+        if system_data:
+            info['system'] = system_data
         
         # Get uptime
         uptime_data = await self._fetch_glances_endpoint("uptime")
@@ -241,6 +246,10 @@ class GlancesMonitor:
         network_data = await self._fetch_glances_endpoint("network")
         if network_data:
             info['network'] = network_data
+        
+        # Add Python version
+        import sys
+        info['python_version'] = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
         
         return info
     

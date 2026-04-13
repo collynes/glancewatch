@@ -1,12 +1,12 @@
 # GlanceWatch
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-green.svg)](https://fastapi.tiangolo.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/glancewatch.svg)](https://pypi.org/project/glancewatch/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/glancewatch?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/glancewatch)
 [![Tests](https://github.com/collynes/glancewatch/workflows/Tests/badge.svg)](https://github.com/collynes/glancewatch/actions)
-[![Coverage](https://img.shields.io/badge/coverage-78%25-brightgreen.svg)](https://github.com/collynes/glancewatch)
+[![Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen.svg)](https://github.com/collynes/glancewatch)
 
 **GlanceWatch** is a lightweight monitoring adapter that bridges [Glances](https://nicolargo.github.io/glances/) system metrics with [Uptime Kuma](https://github.com/louislam/uptime-kuma) and other monitoring tools. It exposes simple HTTP endpoints with configurable thresholds that answer: *"Is my system healthy?"*
 

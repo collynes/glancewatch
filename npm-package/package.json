@@ -1,6 +1,6 @@
 {
   "name": "glancewatch",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Lightweight monitoring adapter for Glances + Uptime Kuma",
   "main": "index.js",
   "bin": {
