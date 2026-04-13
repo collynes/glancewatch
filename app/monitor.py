@@ -41,24 +41,28 @@ class GlancesMonitor:
             raise RuntimeError("Monitor not initialized. Use 'async with' context manager.")
         
         try:
-            # Try with the configured base URL first, if it doesn't end with /api/X, try both v3 and v4
-            url = f"/{endpoint}" if self.config.glances_base_url.endswith(("/api/3", "/api/4")) else f"/api/3/{endpoint}"
+            # Try API v4 first (Glances 4.x), then fall back to v3 (Glances 3.x)
+            if self.config.glances_base_url.endswith(("/api/3", "/api/4")):
+                url = f"/{endpoint}"
+            else:
+                url = f"/api/4/{endpoint}"  # Try v4 first
+            
             logger.debug(f"Fetching Glances endpoint: {url}")
             response = await self.client.get(url)
             response.raise_for_status()
-            data = await response.json()
+            data = response.json()
             logger.debug(f"Received data from {endpoint}: {data}")
             return data
         except httpx.HTTPStatusError as e:
-            # If 404, try API v4
-            if e.response.status_code == 404 and "/api/3/" in url:
+            # If 404 on v4, try API v3 (for older Glances versions)
+            if e.response.status_code == 404 and "/api/4/" in url:
                 try:
-                    url = url.replace("/api/3/", "/api/4/")
-                    logger.debug(f"Retrying with API v4: {url}")
+                    url = url.replace("/api/4/", "/api/3/")
+                    logger.debug(f"Retrying with API v3: {url}")
                     response = await self.client.get(url)
                     response.raise_for_status()
-                    data = await response.json()
-                    logger.debug(f"Received data from {endpoint} (v4): {data}")
+                    data = response.json()
+                    logger.debug(f"Received data from {endpoint} (v3): {data}")
                     return data
                 except Exception:
                     pass

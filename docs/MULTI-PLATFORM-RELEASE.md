@@ -78,7 +78,7 @@ Users can now install GlanceWatch using their preferred package manager:
 
 ## Repository Links
 
-- **Main Repository**: https://github.com/collynes/glanceswatch
+- **Main Repository**: https://github.com/collynes/glancewatch
 - **Homebrew Tap**: https://github.com/collynes/homebrew-glancewatch
 - **PyPI Package**: https://pypi.org/project/glancewatch/
 - **npm Package**: https://www.npmjs.com/package/glancewatch
