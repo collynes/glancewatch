@@ -81,7 +81,7 @@ async def test_disk_with_all_mounts():
     
     async def mock_get(*args, **kwargs):
         response = AsyncMock()
-        response.json = AsyncMock(return_value=mock_disks)
+        response.json = MagicMock(return_value=mock_disks)
         response.raise_for_status = AsyncMock()
         return response
     
@@ -109,7 +109,7 @@ async def test_disk_not_in_monitored_mounts():
     
     async def mock_get(*args, **kwargs):
         response = AsyncMock()
-        response.json = AsyncMock(return_value=mock_disks)
+        response.json = MagicMock(return_value=mock_disks)
         response.raise_for_status = AsyncMock()
         return response
     
@@ -118,7 +118,7 @@ async def test_disk_not_in_monitored_mounts():
             result = await monitor.check_disk()
             # Should only include / and /home, not /var
             assert len(result.disks) == 2
-            mounts = [d["mount"] for d in result.disks]
+            mounts = [d["mount_point"] for d in result.disks]
             assert "/" in mounts
             assert "/home" in mounts
             assert "/var" not in mounts
@@ -142,7 +142,7 @@ async def test_status_check_with_all_ok():
             response_data = [{"mnt_point": "/", "percent": 60.0, "size": 1000000000000, "used": 600000000000, "free": 400000000000, "fs_type": "ext4"}]
         
         response = AsyncMock()
-        response.json = AsyncMock(return_value=response_data)
+        response.json = MagicMock(return_value=response_data)
         response.raise_for_status = AsyncMock()
         return response
     
@@ -173,7 +173,7 @@ async def test_status_check_with_failure():
             response_data = [{"mnt_point": "/", "percent": 60.0, "size": 1000000000000, "used": 600000000000, "free": 400000000000, "fs_type": "ext4"}]
         
         response = AsyncMock()
-        response.json = AsyncMock(return_value=response_data)
+        response.json = MagicMock(return_value=response_data)
         response.raise_for_status = AsyncMock()
         return response
     
@@ -194,7 +194,7 @@ async def test_cpu_missing_total_field():
     
     async def mock_get(*args, **kwargs):
         response = AsyncMock()
-        response.json = AsyncMock(return_value={"idle": 50.0, "system": 30.0})  # No 'total' field
+        response.json = MagicMock(return_value={"idle": 50.0, "system": 30.0})  # No 'total' field
         response.raise_for_status = AsyncMock()
         return response
     
@@ -220,7 +220,7 @@ async def test_disk_with_missing_fields():
     
     async def mock_get(*args, **kwargs):
         response = AsyncMock()
-        response.json = AsyncMock(return_value=mock_disks)
+        response.json = MagicMock(return_value=mock_disks)
         response.raise_for_status = AsyncMock()
         return response
     

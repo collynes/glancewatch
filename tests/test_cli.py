@@ -1,7 +1,7 @@
 """Tests for CLI functionality."""
 
 import pytest
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, call, patch
 import argparse
 import sys
 
@@ -239,9 +239,9 @@ class TestGlancesManagement:
         
         from app.main import start_glances
         
-        # Should raise or handle exception
-        with pytest.raises(Exception):
-            start_glances()
+        # Should handle exception gracefully and return False
+        result = start_glances()
+        assert result is False
     
     @patch('subprocess.Popen')
     @patch('time.sleep')

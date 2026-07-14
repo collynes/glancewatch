@@ -1,7 +1,7 @@
 """Tests for GlancesMonitor."""
 
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.config import Config, ThresholdConfig, DiskConfig
 from app.monitor import GlancesMonitor
@@ -78,7 +78,7 @@ async def test_check_ram_ok(test_config, mock_glances_ram_response):
     """Test RAM check when usage is below threshold."""
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_glances_ram_response)
+        mock_response.json = MagicMock(return_value=mock_glances_ram_response)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -100,7 +100,7 @@ async def test_check_ram_threshold_exceeded(test_config, mock_glances_ram_respon
     
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_glances_ram_response)
+        mock_response.json = MagicMock(return_value=mock_glances_ram_response)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -118,7 +118,7 @@ async def test_check_cpu_ok(test_config, mock_glances_cpu_response):
     """Test CPU check when usage is below threshold."""
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_glances_cpu_response)
+        mock_response.json = MagicMock(return_value=mock_glances_cpu_response)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -137,7 +137,7 @@ async def test_check_disk_ok(test_config, mock_glances_disk_response):
     """Test disk check when usage is below threshold."""
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_glances_disk_response)
+        mock_response.json = MagicMock(return_value=mock_glances_disk_response)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -159,7 +159,7 @@ async def test_check_disk_threshold_exceeded(test_config, mock_glances_disk_resp
     
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_glances_disk_response)
+        mock_response.json = MagicMock(return_value=mock_glances_disk_response)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -190,14 +190,14 @@ async def test_check_status(test_config, mock_glances_ram_response,
                            mock_glances_cpu_response, mock_glances_disk_response):
     """Test overall status check."""
     responses = {
-        "/api/3/mem": mock_glances_ram_response,
-        "/api/3/cpu": mock_glances_cpu_response,
-        "/api/3/fs": mock_glances_disk_response
+        "/api/4/mem": mock_glances_ram_response,
+        "/api/4/cpu": mock_glances_cpu_response,
+        "/api/4/fs": mock_glances_disk_response
     }
     
     async def mock_get(url, *args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=responses.get(url, {}))
+        mock_response.json = MagicMock(return_value=responses.get(url, {}))
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -206,9 +206,9 @@ async def test_check_status(test_config, mock_glances_ram_response,
             result = await monitor.check_status()
             
             assert result.ok is True
-            assert "ram" in result.ram
-            assert "cpu" in result.cpu
-            assert "disk" in result.disk
+            assert result.ram["ok"] is True
+            assert result.cpu["ok"] is True
+            assert result.disk["ok"] is True
 
 
 @pytest.mark.asyncio
@@ -216,7 +216,7 @@ async def test_test_connection_success(test_config):
     """Test successful connection test."""
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value={"status": "ok"})
+        mock_response.json = MagicMock(return_value={"status": "ok"})
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     

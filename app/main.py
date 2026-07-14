@@ -9,11 +9,13 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import uvicorn
+import yaml
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from typing import Optional
 
 from . import __version__
 from .config import Config, ConfigLoader
@@ -125,27 +127,16 @@ app.include_router(health_router)
 
 def get_error_response(message: str, detail: str = None) -> dict:
     """Create standardized error response."""
-    return ErrorResponse(
-        ok=False,
-        error=message,
-        detail=detail
-    ).model_dump()
+    return ErrorResponse(ok=False, error=message, detail=detail).model_dump(mode="json")
 
 
-async def handle_metric_error(request: Request, metric_name: str, error: Exception):
+async def handle_metric_error(metric_name: str, error: Exception):
     """Handle metric check errors with configurable HTTP status codes."""
     error_msg = f"Error checking {metric_name}"
     detail = str(error)
-    
     logger.error(f"{error_msg}: {detail}")
-    
-    # Determine HTTP status code
     http_status = app_config.return_http_on_failure or status.HTTP_200_OK
-    
-    return JSONResponse(
-        status_code=http_status,
-        content=get_error_response(error_msg, detail)
-    )
+    return JSONResponse(status_code=http_status, content=get_error_response(error_msg, detail))
 
 
 @app.get("/", tags=["Info"])
@@ -209,79 +200,49 @@ async def get_status(request: Request):
             return result
     
     except Exception as e:
-        return await handle_metric_error(request, "status", e)
+        return await handle_metric_error("status", e)
 
 
 @app.get("/ram", response_model=MetricResponse, tags=["Monitoring"])
 async def get_ram_status(request: Request):
-    """
-    Check RAM usage against configured threshold.
-    
-    Returns:
-        MetricResponse with ok=true if RAM usage is below threshold
-    """
+    """Check RAM usage against configured threshold."""
     try:
         async with GlancesMonitor(app_config) as monitor:
             result = await monitor.check_ram()
-            
             if not result.ok and app_config.return_http_on_failure:
-                return JSONResponse(
-                    status_code=app_config.return_http_on_failure,
-                    content=result.model_dump(mode='json')
-                )
-            
+                return JSONResponse(status_code=app_config.return_http_on_failure,
+                                    content=result.model_dump(mode='json'))
             return result
-    
     except Exception as e:
-        return await handle_metric_error(request, "RAM", e)
+        return await handle_metric_error("RAM", e)
 
 
 @app.get("/cpu", response_model=MetricResponse, tags=["Monitoring"])
 async def get_cpu_status(request: Request):
-    """
-    Check CPU usage against configured threshold.
-    
-    Returns:
-        MetricResponse with ok=true if CPU usage is below threshold
-    """
+    """Check CPU usage against configured threshold."""
     try:
         async with GlancesMonitor(app_config) as monitor:
             result = await monitor.check_cpu()
-            
             if not result.ok and app_config.return_http_on_failure:
-                return JSONResponse(
-                    status_code=app_config.return_http_on_failure,
-                    content=result.model_dump(mode='json')
-                )
-            
+                return JSONResponse(status_code=app_config.return_http_on_failure,
+                                    content=result.model_dump(mode='json'))
             return result
-    
     except Exception as e:
-        return await handle_metric_error(request, "CPU", e)
+        return await handle_metric_error("CPU", e)
 
 
 @app.get("/disk", response_model=DiskMetricResponse, tags=["Monitoring"])
 async def get_disk_status(request: Request):
-    """
-    Check disk usage against configured threshold for monitored mount points.
-    
-    Returns:
-        DiskMetricResponse with ok=true if all disks are below threshold
-    """
+    """Check disk usage against configured threshold."""
     try:
         async with GlancesMonitor(app_config) as monitor:
             result = await monitor.check_disk()
-            
             if not result.ok and app_config.return_http_on_failure:
-                return JSONResponse(
-                    status_code=app_config.return_http_on_failure,
-                    content=result.model_dump(mode='json')
-                )
-            
+                return JSONResponse(status_code=app_config.return_http_on_failure,
+                                    content=result.model_dump(mode='json'))
             return result
-    
     except Exception as e:
-        return await handle_metric_error(request, "disk", e)
+        return await handle_metric_error("disk", e)
 
 
 @app.get("/config", response_model=ConfigResponse, tags=["Configuration"])
@@ -337,9 +298,16 @@ async def get_thresholds():
     }
 
 
+class ThresholdValues(BaseModel):
+    """Typed threshold values for validation."""
+    ram_percent: Optional[float] = None
+    cpu_percent: Optional[float] = None
+    disk_percent: Optional[float] = None
+
+
 class ThresholdUpdate(BaseModel):
     """Request model for updating thresholds."""
-    thresholds: dict
+    thresholds: ThresholdValues
 
 
 @app.put("/config", tags=["Configuration"])
@@ -355,17 +323,15 @@ async def update_config(update: ThresholdUpdate):
         # Update thresholds
         new_thresholds = update.thresholds
         
-        if "ram_percent" in new_thresholds:
-            app_config.thresholds.ram_percent = float(new_thresholds["ram_percent"])
-        if "cpu_percent" in new_thresholds:
-            app_config.thresholds.cpu_percent = float(new_thresholds["cpu_percent"])
-        if "disk_percent" in new_thresholds:
-            app_config.thresholds.disk_percent = float(new_thresholds["disk_percent"])
-        
+        if new_thresholds.ram_percent is not None:
+            app_config.thresholds.ram_percent = new_thresholds.ram_percent
+        if new_thresholds.cpu_percent is not None:
+            app_config.thresholds.cpu_percent = new_thresholds.cpu_percent
+        if new_thresholds.disk_percent is not None:
+            app_config.thresholds.disk_percent = new_thresholds.disk_percent
+
         # Persist to config.yaml
         config_path = ConfigLoader.get_config_path()
-        import yaml
-        
         config_data = {
             "thresholds": {
                 "ram_percent": app_config.thresholds.ram_percent,
@@ -395,16 +361,6 @@ async def update_config(update: ThresholdUpdate):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"ok": False, "error": f"Failed to update configuration: {str(e)}"}
         )
-
-
-@app.put("/thresholds", tags=["Configuration"])
-async def update_thresholds(update: ThresholdUpdate):
-    """
-    Update monitoring thresholds (alias for /config).
-    
-    Updates are applied in-memory immediately and persisted to config.yaml.
-    """
-    return await update_config(update)
 
 
 def cli():
@@ -468,9 +424,14 @@ def cli():
         if not check_glances_running():
             if not args.quiet:
                 print("⚠️  Glances is not running. Starting Glances...")
-            if not start_glances():
+            try:
+                if not start_glances():
+                    if not args.quiet:
+                        print("⚠️  Failed to start Glances automatically")
+                        print("   You may need to start it manually: glances -w")
+            except Exception as e:
                 if not args.quiet:
-                    print("⚠️  Failed to start Glances automatically")
+                    print(f"⚠️  WARNING: Failed to start Glances: {e}")
                     print("   You may need to start it manually: glances -w")
         elif args.verbose:
             print("✓ Glances is already running")
@@ -493,6 +454,7 @@ def cli():
         log_level="error" if args.quiet else "warning",
         access_log=args.verbose
     )
+    sys.exit(0)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 import pytest
 import os
 import tempfile
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from pathlib import Path
 
 from app.config import Config, ThresholdConfig, DiskConfig, ConfigLoader
@@ -225,7 +225,7 @@ async def test_monitor_missing_percent_field():
     # RAM response without 'percent' field
     async def mock_get(*args, **kwargs):
         response = AsyncMock()
-        response.json = AsyncMock(return_value={"total": 16000000000, "used": 8000000000})
+        response.json = MagicMock(return_value={"total": 16000000000, "used": 8000000000})
         response.raise_for_status = AsyncMock()
         return response
     
@@ -253,7 +253,7 @@ async def test_monitor_disk_filter_by_type():
     
     async def mock_get(*args, **kwargs):
         response = AsyncMock()
-        response.json = AsyncMock(return_value=mock_disks)
+        response.json = MagicMock(return_value=mock_disks)
         response.raise_for_status = AsyncMock()
         return response
     
@@ -262,7 +262,7 @@ async def test_monitor_disk_filter_by_type():
             result = await monitor.check_disk()
             # Should only include / (ext4), not tmpfs or devtmpfs
             assert len(result.disks) == 1
-            assert result.disks[0].mount == "/"
+            assert result.disks[0]["mount_point"] == "/"
 
 
 @pytest.mark.asyncio
@@ -276,7 +276,7 @@ async def test_monitor_disk_empty_response():
     
     async def mock_get(*args, **kwargs):
         response = AsyncMock()
-        response.json = AsyncMock(return_value=[])
+        response.json = MagicMock(return_value=[])
         response.raise_for_status = AsyncMock()
         return response
     
@@ -297,9 +297,10 @@ async def test_monitor_without_context_manager():
     )
     
     monitor = GlancesMonitor(config)
-    # Should raise RuntimeError when trying to fetch without initialization
-    with pytest.raises(RuntimeError, match="not initialized"):
-        await monitor.check_ram()
+    # Without context manager, monitor is not initialized — check_ram returns error MetricResponse
+    result = await monitor.check_ram()
+    assert result.ok is False
+    assert result.error is not None and "not initialized" in result.error
 
 
 # ========================================
@@ -355,20 +356,21 @@ async def test_monitor_api_v4_fallback():
     )
     
     call_count = 0
-    
-    async def mock_get(url, *args, **kwargs):
+
+    async def mock_get(self_arg, url, *args, **kwargs):
         nonlocal call_count
         call_count += 1
         response = AsyncMock()
-        
-        if "/api/3/" in url and call_count == 1:
-            # First call to v3 - return 404
+
+        if "/api/4/" in url:
+            # First call to v4 - return 404 to trigger fallback
             response.status_code = 404
             raise httpx.HTTPStatusError("Not Found", request=MagicMock(), response=response)
         else:
-            # Second call to v4 - return success
-            response.json = AsyncMock(return_value={"percent": 50.0})
-            response.raise_for_status = AsyncMock()
+            # Second call to v3 - return success
+            response.json = MagicMock(return_value={"percent": 50.0})
+            response.raise_for_status = MagicMock()
+            response.status_code = 200
             return response
     
     with patch('httpx.AsyncClient.get', new=mock_get):

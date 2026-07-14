@@ -1,7 +1,7 @@
 """Tests for FastAPI endpoints."""
 
 import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -54,7 +54,7 @@ def test_root_endpoint(client):
 
 def test_health_endpoint(client, test_config):
     """Test health check endpoint."""
-    with patch('app.api.health.app_config', test_config):
+    with patch('app.main.app_config', test_config):
         with patch('app.monitor.GlancesMonitor.test_connection', new_callable=AsyncMock) as mock_test:
             mock_test.return_value = True
             response = client.get("/health")
@@ -69,7 +69,7 @@ def test_health_endpoint(client, test_config):
 
 def test_health_endpoint_glances_down(client, test_config):
     """Test health check when Glances is unreachable."""
-    with patch('app.api.health.app_config', test_config):
+    with patch('app.main.app_config', test_config):
         with patch('app.monitor.GlancesMonitor.test_connection', new_callable=AsyncMock) as mock_test:
             mock_test.return_value = False
             response = client.get("/health")
@@ -375,7 +375,7 @@ def test_thresholds_endpoint_update(client, test_config):
     with patch('app.main.app_config', test_config):
         with patch('app.config.ConfigLoader.get_config_path', return_value="/tmp/test_config.yaml"):
             with patch('builtins.open', MagicMock()):
-                response = client.put("/thresholds", json=update_data)
+                response = client.put("/config", json=update_data)
                 
                 assert response.status_code == 200
                 data = response.json()

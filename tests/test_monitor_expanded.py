@@ -1,7 +1,7 @@
 """Expanded tests for monitor module - additional test coverage."""
 
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import httpx
 
 from app.config import Config, ThresholdConfig, DiskConfig
@@ -55,7 +55,7 @@ async def test_check_ram_exactly_at_threshold(test_config):
     
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_ram)
+        mock_response.json = MagicMock(return_value=mock_ram)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -84,7 +84,7 @@ async def test_check_ram_invalid_json(test_config):
     """Test RAM check handles invalid JSON response."""
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(side_effect=ValueError("Invalid JSON"))
+        mock_response.json = Mock(side_effect=ValueError("Invalid JSON"))
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -105,7 +105,7 @@ async def test_check_cpu_exactly_at_threshold(test_config):
     
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_cpu)
+        mock_response.json = MagicMock(return_value=mock_cpu)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -123,7 +123,7 @@ async def test_check_cpu_high_precision(test_config):
     
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_cpu)
+        mock_response.json = MagicMock(return_value=mock_cpu)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -161,7 +161,7 @@ async def test_check_disk_multiple_mounts(test_config_multiple_disks):
     
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_disks)
+        mock_response.json = MagicMock(return_value=mock_disks)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -183,7 +183,7 @@ async def test_check_disk_mixed_status(test_config_multiple_disks):
     
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_disks)
+        mock_response.json = MagicMock(return_value=mock_disks)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -204,7 +204,7 @@ async def test_check_disk_size_calculations(test_config):
     
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_disks)
+        mock_response.json = MagicMock(return_value=mock_disks)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -225,16 +225,16 @@ async def test_check_disk_size_calculations(test_config):
 async def test_check_status_multiple_failures(test_config):
     """Test status check when multiple metrics exceed thresholds."""
     responses = {
-        "/api/3/mem": {"percent": 90.0},
-        "/api/3/cpu": {"total": 95.0},
-        "/api/3/fs": [{"mnt_point": "/", "percent": 92.0, "size": 500_000_000_000, "used": 460_000_000_000, "free": 40_000_000_000, "fs_type": "ext4"}]
+        "/api/4/mem": {"percent": 90.0},
+        "/api/4/cpu": {"total": 95.0},
+        "/api/4/fs": [{"mnt_point": "/", "percent": 92.0, "size": 500_000_000_000, "used": 460_000_000_000, "free": 40_000_000_000, "fs_type": "ext4"}]
     }
     
     async def mock_get(url, *args, **kwargs):
         mock_response = AsyncMock()
         for key in responses:
             if key in url:
-                mock_response.json = AsyncMock(return_value=responses[key])
+                mock_response.json = MagicMock(return_value=responses[key])
                 break
         mock_response.raise_for_status = AsyncMock()
         return mock_response
@@ -262,7 +262,7 @@ async def test_monitor_with_strict_thresholds():
     
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_ram)
+        mock_response.json = MagicMock(return_value=mock_ram)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -287,7 +287,7 @@ async def test_monitor_with_lenient_thresholds():
     
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.json = AsyncMock(return_value=mock_ram)
+        mock_response.json = MagicMock(return_value=mock_ram)
         mock_response.raise_for_status = AsyncMock()
         return mock_response
     
@@ -308,7 +308,7 @@ async def test_connection_test_non_200_status(test_config):
     """Test connection test with non-200 HTTP status."""
     async def mock_get(*args, **kwargs):
         mock_response = AsyncMock()
-        mock_response.raise_for_status = AsyncMock(side_effect=httpx.HTTPStatusError("500 Server Error", request=None, response=None))
+        mock_response.raise_for_status = MagicMock(side_effect=httpx.HTTPStatusError("500 Server Error", request=None, response=None))
         return mock_response
     
     with patch('httpx.AsyncClient.get', new=mock_get):

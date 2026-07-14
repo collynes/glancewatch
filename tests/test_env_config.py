@@ -165,11 +165,12 @@ def test_config_validation_invalid_log_level():
 def test_threshold_validation_out_of_range():
     """Test that threshold validation catches out-of-range values."""
     from app.config import ThresholdConfig
-    
-    with pytest.raises(ValueError, match="Threshold must be between 0 and 100"):
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
         ThresholdConfig(ram_percent=150.0)
-    
-    with pytest.raises(ValueError, match="Threshold must be between 0 and 100"):
+
+    with pytest.raises(ValidationError):
         ThresholdConfig(cpu_percent=-10.0)
 
 

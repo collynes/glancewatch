@@ -10,32 +10,23 @@ from pydantic import BaseModel, Field, field_validator
 
 class ThresholdConfig(BaseModel):
     """Threshold configuration for monitoring."""
-    
+
     ram_percent: float = Field(default=80.0, ge=0.0, le=100.0)
     cpu_percent: float = Field(default=80.0, ge=0.0, le=100.0)
     disk_percent: float = Field(default=85.0, ge=0.0, le=100.0)
-    
-    @field_validator('ram_percent', 'cpu_percent', 'disk_percent')
-    @classmethod
-    def validate_percentage(cls, v):
-        """Ensure threshold is between 0 and 100."""
-        if not 0 <= v <= 100:
-            raise ValueError(f"Threshold must be between 0 and 100, got {v}")
-        return v
 
 
 class DiskConfig(BaseModel):
     """Disk monitoring configuration."""
-    
+
     mounts: List[str] = Field(default_factory=lambda: ["/"])
     exclude_types: List[str] = Field(
         default_factory=lambda: ["tmpfs", "devtmpfs", "overlay", "squashfs"]
     )
-    
+
     @field_validator('mounts')
     @classmethod
     def validate_mounts(cls, v):
-        """Validate mount point configuration."""
         if not v:
             raise ValueError("At least one mount point must be specified")
         return v
@@ -100,7 +91,10 @@ class ConfigLoader:
             return {}
         
         with open(config_path, "r") as f:
-            return yaml.safe_load(f) or {}
+            try:
+                return yaml.safe_load(f) or {}
+            except yaml.YAMLError:
+                return {}
     
     @staticmethod
     def load_from_env() -> dict:
