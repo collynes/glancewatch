@@ -4,7 +4,7 @@ const { execSync } = require('child_process');
 const os = require('os');
 
 const platform = os.platform();
-const version = '1.2.2';
+const version = '1.2.9';
 
 console.log('📦 Installing GlanceWatch v' + version + '...');
 console.log('Platform:', platform);
