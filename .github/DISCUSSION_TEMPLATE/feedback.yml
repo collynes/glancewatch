@@ -1,0 +1,65 @@
+title: "Share Your Experience with GlanceWatch"
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 👋 Thanks for using GlanceWatch!
+        
+        We'd love to hear about your experience. Your feedback helps make GlanceWatch better for everyone.
+
+  - type: textarea
+    id: experience
+    attributes:
+      label: How has GlanceWatch been working for you?
+      description: Tell us what you like, what could be better, or any challenges you've faced.
+      placeholder: "Example: I love the clean UI and real-time updates. It's been monitoring my homelab for 2 weeks without issues."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: use-case
+    attributes:
+      label: What are you using GlanceWatch for?
+      options:
+        - Personal homelab monitoring
+        - Production server monitoring
+        - Development environment
+        - Uptime Kuma integration
+        - Just testing it out
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: satisfaction
+    attributes:
+      label: Overall satisfaction
+      options:
+        - "😍 Love it!"
+        - "😊 Works great"
+        - "😐 It's okay"
+        - "😕 Needs improvement"
+        - "😞 Not satisfied"
+    validations:
+      required: true
+
+  - type: textarea
+    id: features
+    attributes:
+      label: Feature requests or suggestions (optional)
+      description: What features would make GlanceWatch even better for you?
+      placeholder: "Example: Would love to see Docker container monitoring"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: recommend
+    attributes:
+      label: Would you recommend GlanceWatch to others?
+      options:
+        - label: "Yes, I'd recommend it!"
+        - label: "Maybe, with some improvements"
+        - label: "Not yet"
+    validations:
+      required: true

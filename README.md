@@ -220,9 +220,22 @@ See [docs/RELEASE_NOTES_v1.2.1.md](docs/RELEASE_NOTES_v1.2.1.md) for complete re
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## 📧 Support
+## � Feedback
 
-- **Issues**: [GitHub Issues](https://github.com/collynes/glancewatch/issues)
+**We'd love to hear from you!** 
+
+Using GlanceWatch? [Share your experience](https://github.com/collynes/glancewatch/discussions) and help us make it better. Takes just 2 minutes!
+
+- 😍 What's working well?
+- 🤔 What could be improved?
+- 💡 Feature ideas?
+
+Your feedback directly shapes future development.
+
+## �📧 Support
+
+- **Feedback & Discussions**: [GitHub Discussions](https://github.com/collynes/glancewatch/discussions)
+- **Bug Reports**: [GitHub Issues](https://github.com/collynes/glancewatch/issues)
 - **PyPI**: [pypi.org/project/glancewatch](https://pypi.org/project/glancewatch/)
 
 ---
